@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tic Tac Toe - AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Tic Tac Toe</h1>
+    <p class="subtitle">You play <span class="o-color">O</span>, AI plays <span class="x-color">X</span></p>
+    
+    <div id="board"></div>
+    <div id="status"></div>
+    <button onclick="resetGame()">Play Again</button>
+
+    <script>
+        let board = Array(9).fill(" ");
+
+        function renderBoard() {
+            const boardDiv = document.getElementById("board");
+            boardDiv.innerHTML = "";
+            board.forEach((cell, idx) => {
+                const btn = document.createElement("div");
+                btn.className = "cell";
+                btn.dataset.index = idx;
+
+                if (cell === 'O') {
+                    btn.innerHTML = '<span class="o">O</span>';
+                } else if (cell === 'X') {
+                    btn.innerHTML = '<span class="x">X</span>';
+                }
+
+                if (cell === " " && !document.getElementById("status").innerHTML) {
+                    btn.onclick = () => makeMove(idx);
+                }
+
+                boardDiv.appendChild(btn);
+            });
+        }
+
+        function makeMove(pos) {
+            fetch("/move", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ board: board, pos: pos })
+            })
+            .then(res => res.json())
+            .then(data => {
+                board = data.board;
+                renderBoard();
+                const status = document.getElementById("status");
+                if (data.done) {
+                    if (data.winner === "O") status.innerHTML = "🎉 You Win!";
+                    else if (data.winner === "X") status.innerHTML = "😢 AI Wins!";
+                    else status.innerHTML = "😐 It's a Draw!";
+                }
+            });
+        }
+
+        function resetGame() {
+            board = Array(9).fill(" ");
+            document.getElementById("status").innerHTML = "";
+            renderBoard();
+        }
+
+        renderBoard();
+    </script>
+</body>
+</html>
